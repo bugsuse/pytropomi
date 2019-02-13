@@ -16,14 +16,11 @@
     
 """
 
-
-import os
-import base64
 import warnings
 
 import requests
-from shapely import wkt
-from shapely.geometry import Point
+
+from .utils import inpolygon
 
 
 class s5p(object):
@@ -47,8 +44,8 @@ class s5p(object):
         :param endIngestionDate(datetime.datetime):
         :param offset(int): skip the number of file, 从开头跳过多少个文件
         :param limit(int): display the total numbers of file on one page, default 25，每页显示的文件数
-        :param sortedby(str): sorted type, including "ingestiondate", "beginposition" and "cloudcoverpercentage"
-        :param order(str): order type, including "desc" and "asc"，降序和升序
+        :param sortedby(str): sorted type, optional parameters include "ingestiondate", "beginposition" and "cloudcoverpercentage"
+        :param order(str): order type, optional parameters include "desc" and "asc"，降序和升序
         :param product_header(dict): browser headers to index product
         """
 
@@ -77,6 +74,7 @@ class s5p(object):
     def login(self):
         """login s5phub
         """
+        from base64 import b64encode
 
         if self._username is None and self._password is None:
             self._username, self._password = 's5pguest', 's5pguest'
@@ -90,9 +88,9 @@ class s5p(object):
             self._login_headers = {'Accept': 'application/json, text/plain, */*',
                                    'Accept-Encoding': 'gzip, deflate, br',
                                    'Accept-Language': 'zh-CN,zh;q=0.9',
-                                   'Authorization': 'Basic {0}'.format(base64.b64encode((self._username +
-                                                                                        ':' +
-                                                                                        self._password).encode('utf-8')).decode('utf-8')),
+                                   'Authorization': 'Basic {0}'.format(b64encode((self._username +
+                                                                                  ':' +
+                                                                                  self._password).encode('utf-8')).decode('utf-8')),
                                    'Cache-Control': 'no-cache',
                                    'Connection': 'keep-alive',
                                    'Content-Type': 'application/x-www-form-urlencoded',
@@ -192,7 +190,7 @@ class s5p(object):
         self._mission = mission
 
         if len(filters) == 0:
-            if len(mission) <=30:
+            if len(mission) <= 30:
                 filters = '*'
             elif len(mission) > 30:
                 filters += mission
@@ -215,18 +213,29 @@ class s5p(object):
 
     def next_page(self, offset=None):
         """
-        :param offset:
+        :param offset(int): skip the number of file, 从开头跳过多少个文件
         :return:
         """
         if offset is not None:
             self._offset = offset
 
-        return self.filter()
+        self.totalresults = self.filter().json().get('totalresults')
+
+        if self.totalresults < self._limit:
+            warnings.warn('The total number of results have exactly indexed!')
+            return None
+        else:
+            return self.filter()
 
 
     def parse_filters(self, longitude=None, latitude=None):
+        """
+        :param longitude:
+        :param latitude:
+        :return:
+        """
 
-        self.json = self.filter.json()
+        self.json = self.filter().json()
         self.keys = self.json.keys()
 
         self.products = self.json.get('products', None)
@@ -258,15 +267,21 @@ class s5p(object):
             self._offline = iters.get('offline')
 
             if longitude is not None and latitude is not None:
-                self._multipolygon = wkt.loads(self._wkt)
-                point = Point(longitude, latitude)
+                ipg, self._multipolygon = inpolygon(self._wkt, longitude, latitude)
 
-                if self._multipolygon.contains(point):
+                if ipg:
                     pass
             else:
                 return None
 
     def download(self, uuid, savepath=None, chunk_size=1024):
+        """ To download product file indexed
+        :param uuid: product file id
+        :param savepath:
+        :param chunk_size: the chunk size of write to file
+        :return:
+        """
+        from os.path import join as opjoin
 
         if savepath is None:
             savepath = ''
@@ -276,10 +291,10 @@ class s5p(object):
 
         with requests.get(self._url, headers=self._login_headers, stream=True) as r:
             if r.status_code == 200:
-                with open(os.path.join(self._savepath, self._filename), 'wb') as f:
+                with open(opjoin(self._savepath, self._filename), 'wb') as f:
                     for chunk in r.iter_content(chunk_size=chunk_size):
                         if chunk:
                             f.write(chunk)
             else:
-                warnings.warn('warning', '{0} download failed, http status code: {1}'.format(self._filename,
-                                                                                             r.status_code))
+                warnings.warn('{0} download failed, http status code: {1}'.format(self._filename,
+                                                                                  r.status_code))
