@@ -122,6 +122,7 @@ class s5p(object):
             self._login_data = {'login_username': None,
                                 'login_password': None}
 
+            print('logout successfully!')
             return True
 
 
@@ -205,9 +206,6 @@ class s5p(object):
 
         mission += ' ) )'
 
-        self._filters = filters
-        self._mission = mission
-
         if len(filters) == 0:
             if len(mission) <= 30:
                 filters = '*'
@@ -229,14 +227,8 @@ class s5p(object):
                                            cookies=self._login_results.cookies,
                                            params=self._params)
 
-        if self.longitude is not None and self.latitude is not None:
-            return self._parse_search(longitude=self.longitude,
-                                      latitude=self.latitude)
-
-        if self.polygon is not None:
-            return self._parse_search(polygon=self.polygon,
-                                      area=self.area)
-
+        return self._parse_search(longitude=self.longitude, latitude=self.latitude,
+                                  polygon=self.polygon, area=self.area)
 
     def next_page(self, offset=None):
         """
