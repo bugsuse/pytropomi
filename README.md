@@ -7,6 +7,7 @@ To install the pachage using below command
 
 ```bash
    git clone https://github.com/bugsuse/pytropomi.git
+   cd pytropomi
    python setup.py install
 ```
 
