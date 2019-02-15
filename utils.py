@@ -5,11 +5,11 @@ import shapely.geometry
 
 
 def inpolygon(wkt, longitude, latitude):
-    """
-    :param wkt:
-    :param longitude:
-    :param latitude:
-    :return:
+    """ To determine whether the longitude and latitude coordinate is within the orbit
+    :param wkt(str): the orbit wkt info
+    :param longitude: to determine whether the longitude within the orbit
+    :param latitude: to determine whether the latitude within the orbit
+    :return: logical value whether the coordinate within the orbit and multipolygon
     """
 
     multipolygon = shapely.wkt.loads(wkt)
@@ -18,11 +18,11 @@ def inpolygon(wkt, longitude, latitude):
     return multipolygon.contains(point), multipolygon
 
 def polygonits(wkt, polygon, area):
-    """
-    :param wkt:
-    :param polygon:
-    :param area:
-    :return:
+    """ To determine whether the polygon intersect with the orbit
+    :param wkt(str): the orbit wkt info
+    :param polygon(Polygon): to determine whether the polygon intersect with the orbit
+    :param area(float): the min area to filter the polygon intersect with the orbit
+    :return: logical value whether the polygon intersect with the orbit
     """
 
     if area is None:
