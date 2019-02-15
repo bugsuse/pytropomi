@@ -1,15 +1,11 @@
 #!-*- coding: utf-8 -*-
 
 """
-   To Download TROPOMI Product from s5phub
+   To download TROPOMI Sentinel-5 Product from s5phub data center
 
    @date: 2019.02.12
    @auth:ly
-"""
-
-"""
-    TODO:
-    * 支持多线程下载
+   @mail: lightning_ly at yahoo dot com
 """
 
 import warnings
@@ -21,29 +17,30 @@ from utils import inpolygon, polygonits
 
 
 class s5p(object):
-    def __init__(self, username=None, password=None, login_headers=None, login_data=None, platformname='Sentinel-5',
-                 producttype=None, processinglevel=None, processingmode=None, orbitnumber=None, beginPosition=None,
-                 endPosition=None, beginIngestionDate=None, endIngestionDate=None, offset=0, limit=25,
-                 sortedby='ingestiondate', order='desc', product_header=None):
+    def __init__(self, username=None, password=None, login_headers=None, login_data=None, product_header=None,
+                 platformname='Sentinel-5', producttype=None, processinglevel=None, processingmode=None,
+                 orbitnumber=None, beginPosition=None, endPosition=None, beginIngestionDate=None, endIngestionDate=None,
+                 offset=0, limit=25, sortedby='ingestiondate', order='desc'):
         """ Init s5p
         :param username: username, default username is s5pguest
         :param password: password, default password is s5pguest
         :param login_headers: browser headers for login s5phub
         :param login_data: form data for login s5phub
+        :param product_header(dict): browser headers to index product
         :param platformname(str): satellites type, default Sentinel-5
-        :param producttype(str): product type,
-        :param processinglevel(str): product level, including Level1B and Level2, namely L1B and L2
+        :param producttype(str): product type, Level 2 include L2__NO2___, L2__SO2___, L2__O3____ etc, please see tropomi
+                               to get the details product type list
+        :param processinglevel(str): product level, including Level1B and Level2, i.e. L1B and L2
         :param processingmode(str): including (Near real time) and (Offline)
         :param orbitnumber(int): satellites orbit number
-        :param beginPosition(datetime.datetime):
-        :param endPosition(datetime.datetime):
+        :param beginPosition(datetime.datetime): the start date for indexing product file
+        :param endPosition(datetime.datetime): the end date for indexing product file
         :param beginIngestionDate(datetime.datetime):
         :param endIngestionDate(datetime.datetime):
-        :param offset(int): skip the number of file, 从开头跳过多少个文件
-        :param limit(int): display the total numbers of file on one page, default 25，每页显示的文件数
+        :param offset(int): the number of file needing skip
+        :param limit(int): display the total numbers of file on indexed page, default 25
         :param sortedby(str): sorted type, optional parameters include "ingestiondate", "beginposition" and "cloudcoverpercentage"
-        :param order(str): order type, optional parameters include "desc" and "asc"，降序和升序
-        :param product_header(dict): browser headers to index product
+        :param order(str): order type, optional parameters include "desc" and "asc"，i.e. descending or ascending
         """
 
         self._login_url = 'https://s5phub.copernicus.eu/dhus//login'
@@ -88,7 +85,8 @@ class s5p(object):
                                    'Accept-Language': 'zh-CN,zh;q=0.9',
                                    'Authorization': 'Basic {0}'.format(b64encode((self._username +
                                                                                   ':' +
-                                                                                  self._password).encode('utf-8')).decode('utf-8')),
+                                                                                  self._password).encode(
+                                       'utf-8')).decode('utf-8')),
                                    'Cache-Control': 'no-cache',
                                    'Connection': 'keep-alive',
                                    'Content-Type': 'application/x-www-form-urlencoded',
@@ -113,6 +111,9 @@ class s5p(object):
             return False
 
     def logout(self):
+        """logout s5phub
+        :return:
+        """
 
         self._logout_results = requests.post(self._logout_url, headers=self._login_headers)
 
@@ -125,13 +126,13 @@ class s5p(object):
             print('logout successfully!')
             return True
 
-
     def search(self, polygon=None, longitude=None, latitude=None, area=None):
-        """
-        :param polygon:
-        :param longitude:
-        :param latitude:
-        :param area:
+        """ To filter product file based on the condition, such as whether the polygon intersect with the orbit, or
+         the longitude and latitude coordinate within the orbit
+        :param polygon((shapely.geometry.polygon.Polygon)): the polygon use to determine whether the polygon intersect with the orbit
+        :param area(float): the min value of area use to filter the polygon intersected with the orbit
+        :param longitude(float): the longitude use to determine whether the coordinate within the orbit
+        :param latitude(float): the latitude use to determine whether the coordinate within the orbit
         :return:
         """
         self.polygon = polygon
@@ -141,34 +142,34 @@ class s5p(object):
 
         if self._product_header is None:
             self._product_header = {'Accept': 'application/json, text/plain, */*',
-                                  'Accept-Encoding': 'gzip, deflate, br',
-                                  'Accept-Language': 'zh-CN,zh;q=0.9',
-                                  'Cache-Control': 'no-cache',
-                                  'Connection': 'keep-alive',
-                                  'Host': 's5phub.copernicus.eu',
-                                  'Pragma': 'no-cache',
-                                  'Referer': 'https://s5phub.copernicus.eu/dhus/',
-                                  'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6)'
-                                                ' AppleWebKit/537.36 (KHTML, like Gecko) '
-                                                'Chrome/71.0.3578.98 '
-                                                'Safari/537.36',
-                                  'X-Requested-With': 'XMLHttpRequest'}
+                                    'Accept-Encoding': 'gzip, deflate, br',
+                                    'Accept-Language': 'zh-CN,zh;q=0.9',
+                                    'Cache-Control': 'no-cache',
+                                    'Connection': 'keep-alive',
+                                    'Host': 's5phub.copernicus.eu',
+                                    'Pragma': 'no-cache',
+                                    'Referer': 'https://s5phub.copernicus.eu/dhus/',
+                                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6)'
+                                                  ' AppleWebKit/537.36 (KHTML, like Gecko) '
+                                                  'Chrome/71.0.3578.98 '
+                                                  'Safari/537.36',
+                                    'X-Requested-With': 'XMLHttpRequest'}
 
         filters = ''
 
         if self._beginPosition is not None and self._endPosition is None:
             filters += '( beginPosition:[{0} TO NOW] ' \
-                        'AND ' \
-                        'endPosition:[{1} TO NOW] ) ' \
-                        'AND '.format(self._beginPosition.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
-                                     self._beginPosition.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+                       'AND ' \
+                       'endPosition:[{1} TO NOW] ) ' \
+                       'AND '.format(self._beginPosition.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+                                     self._beginPosition.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
                                      )
         elif self._beginPosition is None and self._endPosition is not None:
             filters += '( beginPosition:[* TO {0}] ' \
-                        'AND ' \
-                        'endPosition:[* TO {1}] ) ' \
-                        'AND '.format(self._endPosition.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
-                                      self._endPosition.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+                       'AND ' \
+                       'endPosition:[* TO {1}] ) ' \
+                       'AND '.format(self._endPosition.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+                                     self._endPosition.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
                                      )
         elif self._beginPosition is not None and self._endPosition is not None:
             filters += '( beginPosition:[{0} TO {1}] ' \
@@ -178,17 +179,20 @@ class s5p(object):
                                      self._endPosition.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
                                      self._beginPosition.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
                                      self._endPosition.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
-                                    )
+                                     )
 
         if self._beginIngestionDate is not None and self._endIngestionDate is not None:
-            filters += '( ingestionDate:[{0} TO {1} ] ) AND '.format(self._beginIngestionDate.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
-                                                                     self._endIngestionDate.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
-                                                                    )
+            filters += '( ingestionDate:[{0} TO {1} ] ) AND '.format(
+                self._beginIngestionDate.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+                self._endIngestionDate.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+            )
         elif self._beginIngestionDate is None and self._endIngestionDate is not None:
-            filters += '( ingestionDate:[* TO {0} ] ) AND '.format(self._endIngestionDate.strftime('%Y-%m-%dT%H:%M:%S.%fZ'))
+            filters += '( ingestionDate:[* TO {0} ] ) AND '.format(
+                self._endIngestionDate.strftime('%Y-%m-%dT%H:%M:%S.%fZ'))
 
         elif self._beginIngestionDate is not None and self._endIngestionDate is None:
-            filters += '( ingestionDate:[{0} TO NOW ] ) AND '.format(self._beginIngestionDate.strftime('%Y-%m-%dT%H:%M:%S.%fZ'))
+            filters += '( ingestionDate:[{0} TO NOW ] ) AND '.format(
+                self._beginIngestionDate.strftime('%Y-%m-%dT%H:%M:%S.%fZ'))
 
         mission = '(( platformname:{0} '.format(self._platformname)
 
@@ -231,8 +235,8 @@ class s5p(object):
                                   polygon=self.polygon, area=self.area)
 
     def next_page(self, offset=None):
-        """
-        :param offset(int): skip the number of file, 从开头跳过多少个文件
+        """ update indexed results
+        :param offset(int): the number of file needing skip, default 0
         :return:
         """
         if offset is not None:
@@ -244,50 +248,55 @@ class s5p(object):
         else:
             return self.search(longitude=self.longitude, latitude=self.latitude)
 
-
     def download(self, uuid, filename=None, savepath=None, chunk_size=1024):
         """ To download product file indexed
-        :param uuid: product file id
-        :param savepath:
-        :param chunk_size: the chunk size of write to file
-        :return:
+        :param uuid(str): the unique id of product file indexed
+        :param filename(str): the name of file
+        :param savepath(str): the path saved product file
+        :param chunk_size(int): the size of chunk write to file
         """
-        from os.path import join as opjoin
-
-        if savepath is None:
-            savepath = ''
-        self._savepath = savepath
+        from os import mkdir
+        import os.path as osp
 
         if filename is None:
             filename = self._filename
+
+        if savepath is None:
+            savepath = ''
+        else:
+            if ~osp.exists(self._savepath):
+                mkdir(self._savepath)
+        self._savepath = savepath
+
+        fp = osp.join(self._savepath, filename)
+
+        if osp.exists(fp):
+            warnings.warn('{0} exists!'.format(fp))
 
         self._url = "https://s5phub.copernicus.eu/dhus/odata/v1/Products('{0}')//$value".format(uuid)
         print(self._url)
 
         with requests.get(self._url, headers=self._login_headers, stream=True) as r:
             total_length = int(r.headers.get("Content-Length"))
-            wrote = 0
             if r.status_code == 200:
-                with open(opjoin(self._savepath, filename), 'wb') as f:
+                with open(fp, 'wb') as f:
                     for chunk in tqdm(r.iter_content(chunk_size=chunk_size),
-                                      total=total_length/chunk_size,
+                                      total=total_length / chunk_size,
                                       unit_scale=True):
                         if chunk:
-                            wrote += len(chunk)
                             f.write(chunk)
-
             else:
                 warnings.warn('{0} download failed, http status code: {1}'.format(filename,
                                                                                   r.status_code))
 
-
     def _parse_search(self, polygon, longitude, latitude, area=None):
-        """
-        :param polygon:
-        :param longitude:
-        :param latitude:
-        :param area:
-        :return:
+        """To parse results indexed using search method, and return id, uuid, filename of file and orbit wkt
+        :return
+            id(int): the id of file
+            uuid(str): the unique id of file consisting of url
+            filename(str): the name of file
+            size(str): the total size of indexed file
+            wkt(str): the wkt info of orbit for generating multipolygon using shapely
         """
 
         self.json = self.search_results.json()
