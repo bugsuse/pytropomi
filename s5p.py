@@ -9,18 +9,15 @@
 
 """
     TODO:
-    * 选择只包含给定点的文件
-    * 选择包含给定区域的文件
-    * 调整文件下载策略
     * 支持多线程下载
-    
 """
 
 import warnings
 
 import requests
+from tqdm import tqdm
 
-from .utils import inpolygon
+from utils import inpolygon, polygonits
 
 
 class s5p(object):
@@ -50,6 +47,7 @@ class s5p(object):
         """
 
         self._login_url = 'https://s5phub.copernicus.eu/dhus//login'
+        self._logout_url = 'https://s5phub.copernicus.eu/dhus//logout'
         self._product_url = 'https://s5phub.copernicus.eu/dhus/api/stub/products'
         self._username = username
         self._password = password
@@ -109,15 +107,36 @@ class s5p(object):
         self._login_results = requests.post(self._login_url, headers=self._login_headers, data=self._login_data)
 
         if self._login_results.status_code == 200:
-            print('login successfully!')
+            return True
         else:
             print('status code is {0}'.format(self._login_results.status_code))
+            return False
+
+    def logout(self):
+
+        self._logout_results = requests.post(self._logout_url, headers=self._login_headers)
+
+        if self._logout_results.status_code == 200:
+            self._login_results.cookies = {}
+            self._login_results.status_code = 401
+            self._login_data = {'login_username': None,
+                                'login_password': None}
+
+            return True
 
 
-    def filter(self):
+    def search(self, polygon=None, longitude=None, latitude=None, area=None):
         """
+        :param polygon:
+        :param longitude:
+        :param latitude:
+        :param area:
         :return:
         """
+        self.polygon = polygon
+        self.area = area
+        self.longitude = longitude
+        self.latitude = latitude
 
         if self._product_header is None:
             self._product_header = {'Accept': 'application/json, text/plain, */*',
@@ -205,10 +224,18 @@ class s5p(object):
                         'order': self._order
                         }
 
-        return requests.get(self._product_url,
-                            headers=self._product_header,
-                            cookies=self._login_results.cookies,
-                            params=self._params)
+        self.search_results = requests.get(self._product_url,
+                                           headers=self._product_header,
+                                           cookies=self._login_results.cookies,
+                                           params=self._params)
+
+        if self.longitude is not None and self.latitude is not None:
+            return self._parse_search(longitude=self.longitude,
+                                      latitude=self.latitude)
+
+        if self.polygon is not None:
+            return self._parse_search(polygon=self.polygon,
+                                      area=self.area)
 
 
     def next_page(self, offset=None):
@@ -219,23 +246,59 @@ class s5p(object):
         if offset is not None:
             self._offset = offset
 
-        self.totalresults = self.filter().json().get('totalresults')
-
         if self.totalresults < self._limit:
             warnings.warn('The total number of results have exactly indexed!')
             return None
         else:
-            return self.filter()
+            return self.search(longitude=self.longitude, latitude=self.latitude)
 
 
-    def parse_filters(self, longitude=None, latitude=None):
+    def download(self, uuid, filename=None, savepath=None, chunk_size=1024):
+        """ To download product file indexed
+        :param uuid: product file id
+        :param savepath:
+        :param chunk_size: the chunk size of write to file
+        :return:
         """
+        from os.path import join as opjoin
+
+        if savepath is None:
+            savepath = ''
+        self._savepath = savepath
+
+        if filename is None:
+            filename = self._filename
+
+        self._url = "https://s5phub.copernicus.eu/dhus/odata/v1/Products('{0}')//$value".format(uuid)
+        print(self._url)
+
+        with requests.get(self._url, headers=self._login_headers, stream=True) as r:
+            total_length = int(r.headers.get("Content-Length"))
+            wrote = 0
+            if r.status_code == 200:
+                with open(opjoin(self._savepath, filename), 'wb') as f:
+                    for chunk in tqdm(r.iter_content(chunk_size=chunk_size),
+                                      total=total_length/chunk_size,
+                                      unit_scale=True):
+                        if chunk:
+                            wrote += len(chunk)
+                            f.write(chunk)
+
+            else:
+                warnings.warn('{0} download failed, http status code: {1}'.format(filename,
+                                                                                  r.status_code))
+
+
+    def _parse_search(self, polygon, longitude, latitude, area=None):
+        """
+        :param polygon:
         :param longitude:
         :param latitude:
+        :param area:
         :return:
         """
 
-        self.json = self.filter().json()
+        self.json = self.search_results.json()
         self.keys = self.json.keys()
 
         self.products = self.json.get('products', None)
@@ -270,31 +333,11 @@ class s5p(object):
                 ipg, self._multipolygon = inpolygon(self._wkt, longitude, latitude)
 
                 if ipg:
-                    pass
+                    yield self._id, self._uuid, self._filename, self._size, self._wkt
+            elif polygon is not None:
+                ipg, self._intersection = polygonits(self._wkt, polygon, area)
+
+                if ipg:
+                    yield self._id, self._uuid, self._filename, self._size, self._wkt
             else:
-                return None
-
-    def download(self, uuid, savepath=None, chunk_size=1024):
-        """ To download product file indexed
-        :param uuid: product file id
-        :param savepath:
-        :param chunk_size: the chunk size of write to file
-        :return:
-        """
-        from os.path import join as opjoin
-
-        if savepath is None:
-            savepath = ''
-        self._savepath = savepath
-
-        self._url = "https://s5phub.copernicus.eu/dhus/odata/v1/Products('{0}')//$value".format(uuid)
-
-        with requests.get(self._url, headers=self._login_headers, stream=True) as r:
-            if r.status_code == 200:
-                with open(opjoin(self._savepath, self._filename), 'wb') as f:
-                    for chunk in r.iter_content(chunk_size=chunk_size):
-                        if chunk:
-                            f.write(chunk)
-            else:
-                warnings.warn('{0} download failed, http status code: {1}'.format(self._filename,
-                                                                                  r.status_code))
+                yield self._id, self._uuid, self._filename, self._size, self._wkt
