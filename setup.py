@@ -1,6 +1,6 @@
 #! coding: utf-8 
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 NAME = 'pytropomi'
@@ -20,6 +20,7 @@ setup(
     author=AUTHOR,
     author_email=EMAIL,
     python_requires=REQUIRES_PYTHON,
+    packages=find_packages(),
     url=URL,
     install_requires=REQUIRED,
     include_package_data=True,
