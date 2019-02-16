@@ -274,7 +274,6 @@ class s5p(object):
             warnings.warn('{0} exists!'.format(fp))
 
         self._url = "https://s5phub.copernicus.eu/dhus/odata/v1/Products('{0}')//$value".format(uuid)
-        print(self._url)
 
         with requests.get(self._url, headers=self._login_headers, stream=True) as r:
             total_length = int(r.headers.get("Content-Length"))
