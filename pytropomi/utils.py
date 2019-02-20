@@ -28,12 +28,11 @@ def polygonits(wkt, polygon, area):
     if area is None:
         area = 0
 
-    if ~isinstance(polygon, shapely.geometry.polygon.Polygon):
-        raise ValueError('The type of variable polygon must be shapely.geometry.polygon.Polygon!')
-
     multipolygon = shapely.wkt.loads(wkt)
 
     its = multipolygon.intersection(polygon)
 
     if its.area > area:
         return True, its
+    else:
+        return False, its
