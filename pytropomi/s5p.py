@@ -264,8 +264,10 @@ class s5p(object):
         if savepath is None:
             savepath = ''
         else:
-            if ~osp.exists(self._savepath):
-                mkdir(self._savepath)
+            if osp.exists(savepath):
+                pass
+            else:
+                mkdir(savepath)
         self._savepath = savepath
 
         fp = osp.join(self._savepath, filename)
