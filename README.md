@@ -14,7 +14,7 @@ To install the pachage using commands as follow
 
 ### Usage
 
-The package now support to download the multi-type product, including Level1B and Level2 product of NO2, O3, SO2 and so on, data of assigned date, and you can give a longitude and latitude or a area's polygon which consisting of series longitude and latitude coordinates to filter the product     
+The package now support to download the multi-type product, including Level1B and Level2 product of NO2, O3, SO2 and so on, given the date range, and you can provide a pairs of longitude and latitude coordinate or a polygon and/or the interaction area of two polygon to filter the product     
 
 * filter results by longitude and latitude coordinate pairs
 
