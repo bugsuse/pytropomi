@@ -54,8 +54,8 @@ def downs5p(username=None, password=None, login_headers=None, login_data=None, p
 
     for i in range(1, int(sp.totalresults/sp._limit)):
         for sg in sfs:
-            print('Now, download {0}, the total size of file is {1}.'.format(sg[2], sg[3]))
+            print('now, download {0}, the total size of file is {1}.'.format(sg[2], sg[3]))
             sp.download(sg[1], filename=sg[2], savepath=savepath, chunk_size=chunk_size)
 
-        print('Now, indexed new page {0}...'.format(i+1))
+        print('searching from page {0}...'.format(i+1))
         sfs = sp.next_page(offset=i*sp._limit)

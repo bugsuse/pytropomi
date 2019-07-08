@@ -246,7 +246,10 @@ class s5p(object):
             warnings.warn('The total number of results have exactly indexed!')
             return None
         else:
-            return self.search(longitude=self.longitude, latitude=self.latitude)
+            return self.search(longitude=self.longitude,
+                               latitude=self.latitude,
+                               polygon=self.polygon,
+                               area=self.area)
 
     def download(self, uuid, filename=None, savepath=None, chunk_size=1024):
         """ To download product file indexed
@@ -338,7 +341,6 @@ class s5p(object):
                     yield self._id, self._uuid, self._filename, self._size, self._wkt
             elif polygon is not None:
                 ipg, self._intersection = polygonits(self._wkt, polygon, area)
-
                 if ipg:
                     yield self._id, self._uuid, self._filename, self._size, self._wkt
             else:

@@ -27,8 +27,8 @@ if __name__=='__main__':
     longitude = 121
     latitude = 32
 
-    beginPosition = datetime(2019, 2, 1)
-    endPosition = datetime(2019, 2, 14)
+    beginPosition = datetime(2019, 7, 7)
+    endPosition = datetime(2019, 7, 7)
 
     test_lonlat(products, longitude, latitude, beginPosition)
     test_polygon(products, polygon, area, beginPosition, savepath=None) 
