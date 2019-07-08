@@ -226,6 +226,8 @@ class s5p(object):
                         'order': self._order
                         }
 
+        print(self._params)
+
         self.search_results = requests.get(self._product_url,
                                            headers=self._product_header,
                                            cookies=self._login_results.cookies,

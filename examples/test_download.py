@@ -8,10 +8,11 @@ def test_lonlat(products, longitude, latitude, beginPosition, savepath=None):
         downs5p(producttype=pro, longitude=longitude, latitude=latitude, processingmode='Near real time',
                 beginPosition=beginPosition, savepath=savepath)
 
-def test_polygon(products, polygon, area, beginPosition, savepath=None):
+def test_polygon(products, polygon, area, beginPosition, endPosition, savepath=None):
+    print(endPosition)
     for pro in products:
         downs5p(producttype=pro, polygon=polygon, area=area, processingmode='Near real time',
-                beginPosition=beginPosition, savepath=savepath)
+                beginPosition=beginPosition, endPosition=endPosition, savepath=savepath)
 
 if __name__=='__main__':
 
@@ -28,8 +29,8 @@ if __name__=='__main__':
     latitude = 32
 
     beginPosition = datetime(2019, 7, 7)
-    endPosition = datetime(2019, 7, 7)
+    endPosition = datetime(2019, 7, 8)
 
-    test_lonlat(products, longitude, latitude, beginPosition)
-    test_polygon(products, polygon, area, beginPosition, savepath=None) 
+#    test_lonlat(products, longitude, latitude, beginPosition)
+    test_polygon(products, polygon, area, beginPosition, endPosition, savepath=None) 
 
