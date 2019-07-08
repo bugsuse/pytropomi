@@ -33,7 +33,6 @@ def polygonits(wkt, polygon, area):
     its = multipolygon.intersection(polygon)
 
     if its.area > area:
-        print(its, polygon, multipolygon)
         return True, its
     else:
         return False, its
