@@ -1,5 +1,6 @@
 # pytropomi
 This python module is to download Sentinel-5 from s5phub data center of [TROPOMI](http://www.tropomi.eu), and now just support to download Sentinel-5 product.
+Please read User'guide if you want to know about the details of Sentinel-5 data. 
 
 ### Install
 
