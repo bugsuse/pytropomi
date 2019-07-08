@@ -8,11 +8,47 @@ def test_lonlat(products, longitude, latitude, beginPosition, savepath=None):
         downs5p(producttype=pro, longitude=longitude, latitude=latitude, processingmode='Near real time',
                 beginPosition=beginPosition, savepath=savepath)
 
-def test_polygon(products, polygon, area, beginPosition, endPosition, savepath=None):
-    print(endPosition)
+def test_polygon1(products, polygon, area, savepath=None):
+    for pro in products:
+        downs5p(producttype=pro, polygon=polygon, area=area, processingmode='Near real time',
+             savepath=savepath)
+
+
+def test_polygon2(products, polygon, area, beginPosition, endPosition, savepath=None):
     for pro in products:
         downs5p(producttype=pro, polygon=polygon, area=area, processingmode='Near real time',
                 beginPosition=beginPosition, endPosition=endPosition, savepath=savepath)
+
+def test_polygon3(products, polygon, beginPosition, endPosition, savepath=None):
+    for pro in products:
+        downs5p(producttype=pro, polygon=polygon, processingmode='Near real time',
+                beginPosition=beginPosition, endPosition=endPosition, savepath=savepath)
+
+def test_polygon4(products, polygon, beginPosition, savepath=None):
+    for pro in products:
+        downs5p(producttype=pro, polygon=polygon, processingmode='Near real time',
+                beginPosition=beginPosition, savepath=savepath)
+
+def test_polygon5(products, polygon, endPosition, savepath=None):
+    for pro in products:
+        downs5p(producttype=pro, polygon=polygon, processingmode='Near real time',
+                endPosition=endPosition, savepath=savepath)
+
+def test_polygon6(products, polygon, endPosition, savepath):
+    for pro in products:
+        downs5p(producttype=pro, polygon=polygon, processingmode='Near real time',
+                endPosition=endPosition, savepath=savepath)
+
+def test_polygon7(products, polygon, endPosition, savepath):
+    for pro in products:
+        downs5p(producttype=pro, polygon=polygon, processingmode='Offline',
+                endPosition=endPosition, savepath=savepath)
+
+def test_polygon8(products, polygon, endPosition, savepath):
+    for pro in products:
+        downs5p(producttype=pro, polygon=polygon, processingmode='Reprocessing',
+                endPosition=endPosition, savepath=savepath)
+
 
 if __name__=='__main__':
 
@@ -31,6 +67,7 @@ if __name__=='__main__':
     beginPosition = datetime(2019, 7, 7)
     endPosition = datetime(2019, 7, 8)
 
-#    test_lonlat(products, longitude, latitude, beginPosition)
-    test_polygon(products, polygon, area, beginPosition, endPosition, savepath=None) 
+    savepath = './test'
+
+    test_polygon1(products, polygon, area, savepath=None) 
 
