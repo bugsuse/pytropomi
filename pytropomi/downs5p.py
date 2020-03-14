@@ -1,5 +1,5 @@
 #!-*- coding: utf-8 -*-
-
+import math
 from .s5p import s5p
 
 
@@ -52,7 +52,7 @@ def downs5p(username=None, password=None, login_headers=None, login_data=None, p
 
     print('The total number of file indexed is {0}.'.format(sp.totalresults))
 
-    for i in range(1, int(sp.totalresults/sp._limit)):
+    for i in range(1, math.ceil(sp.totalresults/sp._limit + 1)):
         for sg in sfs:
             print('now, download {0}, the total size of file is {1}.'.format(sg[2], sg[3]))
             sp.download(sg[1], filename=sg[2], savepath=savepath, chunk_size=chunk_size)
