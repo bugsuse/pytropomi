@@ -272,18 +272,25 @@ class s5p(object):
             else:
                 mkdir(savepath)
         self._savepath = savepath
+        self._url = "https://s5phub.copernicus.eu/dhus/odata/v1/Products('{0}')//$value".format(uuid)
 
         fp = osp.join(self._savepath, filename)
-
         if osp.exists(fp):
-            warnings.warn('{0} exists!'.format(fp))
+            with requests.get(self._url, headers=self._login_headers, stream=True) as r:
+                total_length = int(r.headers.get("Content-Length"))
 
-        self._url = "https://s5phub.copernicus.eu/dhus/odata/v1/Products('{0}')//$value".format(uuid)
+            tmp_size = osp.getsize(fp)
+            if tmp_size >= total_length:
+                print(f'{fp} download is complete')
+                return
+
+            print(f'{fp} exists! downloaded {"%.2f" % (tmp_size / 1024 / 1024)}MB')
+            self._login_headers.update({'Range': 'bytes=%d-' % tmp_size})
 
         with requests.get(self._url, headers=self._login_headers, stream=True) as r:
             total_length = int(r.headers.get("Content-Length"))
-            if r.status_code == 200:
-                with open(fp, 'wb') as f:
+            if r.status_code == 200 or r.status_code == 206:
+                with open(fp, 'ab') as f:
                     for chunk in tqdm(r.iter_content(chunk_size=chunk_size),
                                       total=total_length / chunk_size,
                                       unit_scale=True):
