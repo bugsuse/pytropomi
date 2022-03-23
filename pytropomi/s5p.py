@@ -322,24 +322,29 @@ class s5p(object):
             self._identifier = iters.get('identifier')
             self._footprint = iters.get('footprint')
             self._summary = iters.get('summary')
-            self._filename = self._summary[1].split(':')[1].lstrip()
-            self._satellite = self._summary[4].split(':')[1].lstrip()
-            self._size = self._summary[5].split(':')[1].lstrip()
+
+            summary_dict = {i.split(':')[0].strip(): i.split(':')[1].strip() for i in self._summary}
+            self._filename = summary_dict['Filename']
+            self._satellite = summary_dict['Satellite']
+            self._size = summary_dict['Size']
             self._indexes = iters.get('indexes')
 
-            product = self._indexes[1]
-            self._generation_time = product.get('children')[1].get('value')
-            self._ingesstion_time = product.get('children')[2].get('value')
-            self._orbit_number_info = product.get('children')[4]
-            self._revision_info = product.get('children')[11]
-
-            self._thumbnail = iters.get('thumbnail')
-            self._quicklook = iters.get('quicklook')
-            self._instrument = iters.get('instrument')
-            self._productType = iters.get('productType')
-            self._itemClass = iters.get('itemClass')
-            self._wkt = iters.get('wkt')
-            self._offline = iters.get('offline')
+            if 'AUX_' in iters.get('productType'):
+                self._wkt = iters.get('wkt')
+            else:
+                product = self._indexes[1]
+                print(product.get('children'))
+                self._generation_time = product.get('children')[1].get('value')
+                self._ingesstion_time = product.get('children')[2].get('value')
+                self._orbit_number_info = product.get('children')[4]
+                self._revision_info = product.get('children')[11]
+                self._thumbnail = iters.get('thumbnail')
+                self._quicklook = iters.get('quicklook')
+                self._instrument = iters.get('instrument')
+                self._productType = iters.get('productType')
+                self._itemClass = iters.get('itemClass')
+                self._wkt = iters.get('wkt')
+                self._offline = iters.get('offline')
 
             if longitude is not None and latitude is not None:
                 ipg, self._multipolygon = inpolygon(self._wkt, longitude, latitude)
