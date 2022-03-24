@@ -25,7 +25,7 @@ The package now support to download the multi-type product, including Level1B an
     beginPosition = datetime(2019, 7, 7, 0)
     endPosition = datetime(2019, 7, 7, 23)
     
-    pro = 'L2_NO2___'
+    pro = 'L2__NO2___'
 
     longitude = 120
     latitude = 30
@@ -41,12 +41,11 @@ The package now support to download the multi-type product, including Level1B an
    polygon = Polygon([(100, 20), (105, 25), (110, 30), (115, 35), (120, 30), (125, 25), (130, 20), (120,
    area = 20
     
-   pro = 'L2_O3____'
+   pro = 'L2__O3____'
 
    downs5p(producttype=pro, polygon=polygon, area=area, processingmode='Near real time', 
            beginPosition=beginPosition, endPosition=endPosition)
 ```
 
 Please check the scripts inside the examples directory to get the usage about the package.
-
 
